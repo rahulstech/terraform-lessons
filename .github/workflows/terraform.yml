@@ -23,12 +23,27 @@ jobs:
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ secrets.AWS_REGION }}
 
-            - name: Download tfstate
-              uses: actions/download-artifact@v4
-              with:
-                name: terraform-state
-                path: ./terraform-s3-cloudfront/terraform.tfstate
-              continue-on-error: true
+            # Two reasons for which artifacts tfstate are not used
+            #
+            # 1. artifacts are for limited time. 
+            # without tfstate, terraform can not understand
+            # the current state of infra. as a result duplication
+            # or conflict may arise. 
+            #
+            # 2. also artifact does not provides locking. means if 
+            # two people try to apply terraform at the same time 
+            # inconsistancy or duplication may happen. 
+            #
+            # To avoid these stituation S3 + Dyanmo DB is used. 
+            # S3 stores the latest tfstate
+            # DynamoDB ensures multiple apply do not run simultaneously
+            #  
+            # - name: Download tfstate
+            #   uses: actions/download-artifact@v4
+            #   with:
+            #     name: terraform-state
+            #     path: ./terraform-s3-cloudfront/terraform.tfstate
+            #   continue-on-error: true
 
             - name: Terraform Init
               run: terraform init
@@ -38,8 +53,8 @@ jobs:
               run: terraform apply -auto-approve
               working-directory: ./terraform-s3-cloudfront
 
-            - name: Upload tfstate
-              uses: actions/upload-artifact@v4
-              with:
-                name: terraform-state
-                path: ./terraform-s3-cloudfront/terraform.tfstate
+            # - name: Upload tfstate
+            #   uses: actions/upload-artifact@v4
+            #   with:
+            #     name: terraform-state
+            #     path: ./terraform-s3-cloudfront/terraform.tfstate

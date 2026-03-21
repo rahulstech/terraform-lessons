@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket         = "aws-lessons-nodejs"
+    key            = "terraform-states/s3-cloudfront/terraform.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "terraform-lock"
+  }
+}
 
 # provider <service provider name>
 provider "aws" {
